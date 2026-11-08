@@ -1,7 +1,7 @@
 #!/bin/sh
-# Installs (or updates) DayGate from the latest GitHub release, with no "Open Anyway" step:
+# Installs (or updates) Prelude from the latest GitHub release, with no "Open Anyway" step:
 #
-#   curl -fsSL https://raw.githubusercontent.com/vekaev/daygate-releases/main/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/vekaev/prelude/main/install.sh | sh
 #
 # macOS only asks to confirm apps that a browser downloaded (they carry a "downloaded from the internet" mark);
 # a download by curl has no such mark, so the app opens right away. After this it updates itself (Sparkle).
@@ -9,12 +9,12 @@
 # PM_DEST=<folder> installs elsewhere; PM_NO_OPEN=1 doesn't quit or open the app (for testing).
 set -eu
 
-URL="https://github.com/vekaev/daygate-releases/releases/latest/download/DayGate-mac.dmg"
-APP="DayGate.app"
+URL="https://github.com/vekaev/prelude/releases/latest/download/Prelude-mac.dmg"
+APP="Prelude.app"
 BUNDLE_ID="com.vekaev.daygate"
 
 if [ -n "${PM_DEST:-}" ]; then DEST="$PM_DEST"
-elif [ -d "$HOME/Applications/$APP" ]; then DEST="$HOME/Applications"
+elif [ -d "$HOME/Applications/$APP" ] || [ -d "$HOME/Applications/DayGate.app" ]; then DEST="$HOME/Applications"
 elif [ -w /Applications ]; then DEST="/Applications"
 else DEST="$HOME/Applications"
 fi
@@ -23,7 +23,7 @@ TMP=$(mktemp -d)
 cleanup() { hdiutil detach -quiet "$TMP/mnt" 2>/dev/null || true; rm -rf "$TMP"; }
 trap cleanup EXIT
 
-echo "Downloading DayGate…"
+echo "Downloading Prelude…"
 curl -fL --progress-bar "$URL" -o "$TMP/app.dmg"
 hdiutil attach -quiet -nobrowse -noautoopen -mountpoint "$TMP/mnt" "$TMP/app.dmg"
 
@@ -35,7 +35,9 @@ fi
 mkdir -p "$DEST"
 rm -rf "$DEST/$APP"
 ditto "$TMP/mnt/$APP" "$DEST/$APP"
+# Prelude used to be called DayGate: remove the old app bundle (settings and data live elsewhere and stay).
+[ -z "${PM_DEST:-}" ] && rm -rf "$DEST/DayGate.app"
 
 version=$(defaults read "$DEST/$APP/Contents/Info" CFBundleShortVersionString 2>/dev/null || echo "?")
-echo "Installed DayGate $version in $DEST. It updates itself from now on."
+echo "Installed Prelude $version in $DEST. It updates itself from now on."
 [ -n "${PM_NO_OPEN:-}" ] || open "$DEST/$APP"
